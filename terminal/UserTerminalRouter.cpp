@@ -21,7 +21,7 @@
 #include <util.h>
 #elif __FreeBSD__
 #include <libutil.h>
-#elif __NetBSD__ // do not need pty.h on NetBSD
+#elif __NetBSD__ || __sun__ // do not need pty.h on NetBSD
 #else
 #include <pty.h>
 #endif

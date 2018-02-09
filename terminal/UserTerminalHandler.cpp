@@ -21,7 +21,9 @@
 #include <util.h>
 #elif __FreeBSD__
 #include <libutil.h>
-#elif __NetBSD__ // do not need pty.h on NetBSD
+#elif __sun__ // include compat layer on illumos
+#include "SunOS.hpp"
+#elif __NetBSD__ // do not need pty.h or util.h on NetBSD
 #else
 #include <pty.h>
 #endif

@@ -32,7 +32,7 @@
 #elif __FreeBSD__
 #include <libutil.h>
 #include <sys/socket.h>
-#elif __NetBSD__ // do not need pty.h on NetBSD
+#elif __NetBSD__ || __sun__ // do not need pty.h on NetBSD or illumos
 #else
 #include <pty.h>
 #include <signal.h>
@@ -65,7 +65,7 @@ DEFINE_int32(dstport, 2022, "Must be set if jump is set to true");
 shared_ptr<ServerConnection> globalServer;
 shared_ptr<UserTerminalRouter> terminalRouter;
 vector<shared_ptr<thread>> terminalThreads;
-mutex terminalThreadMutex;
+std::mutex terminalThreadMutex;
 bool halt = false;
 string getIdpasskey() {
   string idpasskey = FLAGS_idpasskey;
@@ -97,7 +97,7 @@ void setDaemonLogFile(string idpasskey, string daemonType) {
   string first_idpass_chars = idpasskey.substr(0, 10);
   string std_file =
       string("/tmp/etserver_") + daemonType + "_" + first_idpass_chars;
-#if __NetBSD__
+#if __NetBSD__ || __sun__
     FILE* stdout_stream = freopen("/tmp/etclient_err", "w+", stdout);
     setvbuf(stdout_stream, NULL, _IOLBF, BUFSIZ);  // set to line buffering
     FILE* stderr_stream = freopen("/tmp/etclient_err", "w+", stderr);
@@ -577,7 +577,7 @@ int main(int argc, char **argv) {
     if (::daemon(0, 0) == -1) {
       LOG(FATAL) << "Error creating daemon: " << strerror(errno);
     }
-#if __NetBSD__
+#if __NetBSD__ || __sun__
     FILE* stdout_stream = freopen("/tmp/etclient_err", "w+", stdout);
     setvbuf(stdout_stream, NULL, _IOLBF, BUFSIZ);  // set to line buffering
     FILE* stderr_stream = freopen("/tmp/etclient_err", "w+", stderr);

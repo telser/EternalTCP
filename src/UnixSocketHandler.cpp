@@ -397,8 +397,12 @@ bool UnixSocketHandler::initSocket(int fd) {
 #ifndef MSG_NOSIGNAL
   // If we don't have MSG_NOSIGNAL, use SO_NOSIGPIPE
   int val = 1;
-  FATAL_FAIL(
-      setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val)));
+  // Unless we're on sun.. Then ??
+#if __sun__
+  FATAL_FAIL(setsockopt(fd, SOL_SOCKET, EPIPE, (void *)&val, sizeof(val)));
+#else
+  FATAL_FAIL(setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val)));
+#endif
 #endif
   return true;
 }

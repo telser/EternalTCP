@@ -35,7 +35,7 @@ class BackedWriter {
   inline int64_t getSequenceNumber() { return sequenceNumber; }
 
  protected:
-  mutex recoverMutex;
+  std::mutex recoverMutex;
   shared_ptr<SocketHandler> socketHandler;
   shared_ptr<CryptoHandler> cryptoHandler;
   int socketFd;

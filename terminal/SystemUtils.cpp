@@ -10,6 +10,10 @@
 #include <selinux/selinux.h>
 #endif
 
+#ifdef __sun__
+#include <unistd.h>
+#endif
+
 namespace et {
 void rootToUser(passwd* pwd) {
   string terminal;
@@ -28,6 +32,12 @@ void rootToUser(passwd* pwd) {
 
 #ifdef __APPLE__
   if (getgrouplist(pwd->pw_name, pwd->pw_gid, (int*)groups, &ngroups) == -1) {
+    LOG(FATAL) << "User is part of more than 65536 groups!";
+  }
+#elif __sun__
+  // getgroups on sun, when given 0 as the first arg, does *not* modify the 
+  // array passed to it and returns the number of groups of the current process
+  if (getgroups(0, groups) > 65536) {
     LOG(FATAL) << "User is part of more than 65536 groups!";
   }
 #else

@@ -24,6 +24,11 @@ if (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
     set(FREEBSD TRUE)
 endif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 
+#Using SunOS?
+if (CMAKE_SYSTEM_NAME MATCHES "SunOS")
+    set(SUNOS TRUE)
+endif (CMAKE_SYSTEM_NAME MATCHES "SunOS")
+
 # Add cmake script directory.
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -59,8 +64,14 @@ PROTOBUF_GENERATE_CPP(
   proto/ET.proto
   )
 
+set(COMPAT_INCLUDE_DIR "")
+set(COMPAT_SRC "")
 IF(FREEBSD)
   set(CORE_LIBRARIES util)
+ELSEIF(SUNOS)
+  set(CORE_LIBRARIES socket nsl resolv)
+  set(COMPAT_INCLUDE_DIR "compat")
+  set(COMPAT_SRC compat/SunOS.cpp)
 ELSE()
   set(CORE_LIBRARIES util resolv)
 ENDIF()
@@ -69,6 +80,7 @@ include_directories(
   ext
   src
   terminal
+  ${COMPAT_INCLUDE_DIR}
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CURSES_INCLUDE_DIR}
@@ -120,6 +132,7 @@ add_library(
   TerminalCommon
   STATIC
 
+  ${COMPAT_SRC}
   terminal/SystemUtils.cpp
   terminal/RawSocketUtils.cpp
   terminal/PortForwardHandler.cpp

@@ -21,7 +21,7 @@ class CryptoHandler {
   unsigned char key[crypto_secretbox_KEYBYTES];
 
  private:
-  mutex cryptoMutex;
+  std::mutex cryptoMutex;
 };
 }  // namespace et
 

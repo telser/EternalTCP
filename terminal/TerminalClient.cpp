@@ -19,6 +19,10 @@
 
 #include "ETerminal.pb.h"
 
+#if __sun__
+#include "SunOS.hpp"
+#endif
+
 using namespace et;
 namespace google {}
 namespace gflags {}
@@ -34,7 +38,7 @@ shared_ptr<ClientConnection> globalClient;
 termios terminal_backup;
 
 DEFINE_string(u, "", "username to login");
-DEFINE_string(host, "localhost", "host to join");
+DEFINE_string(hst, "localhost", "host to join");
 DEFINE_int32(port, 2022, "port to connect on");
 DEFINE_string(c, "", "Command to run immediately after connecting");
 DEFINE_string(t, "",
@@ -73,7 +77,7 @@ shared_ptr<ClientConnection> createClient(string idpasskeypair) {
 
   shared_ptr<SocketHandler> clientSocket(new UnixSocketHandler());
   shared_ptr<ClientConnection> client = shared_ptr<ClientConnection>(
-      new ClientConnection(clientSocket, FLAGS_host, FLAGS_port, id, passkey));
+      new ClientConnection(clientSocket, FLAGS_hst, FLAGS_port, id, passkey));
 
   int connectFailCount = 0;
   while (true) {
@@ -85,7 +89,7 @@ shared_ptr<ClientConnection> createClient(string idpasskeypair) {
       connectFailCount++;
       if (connectFailCount == 3) {
         LOG(INFO) << "Could not make initial connection to server";
-        cout << "Could not make initial connection to " << FLAGS_host << ": "
+        cout << "Could not make initial connection to " << FLAGS_hst << ": "
              << err.what() << endl;
         exit(1);
       }
@@ -211,7 +215,7 @@ int main(int argc, char** argv) {
       FLAGS_port = stoi(arg.substr(i + 1));
       arg = arg.substr(0, i);
     }
-    FLAGS_host = arg;
+    FLAGS_hst = arg;
   }
 
   Options options = {
@@ -232,13 +236,13 @@ int main(int argc, char** argv) {
   };
 
   char* home_dir = ssh_get_user_home_dir();
-  string host_alias = FLAGS_host;
-  ssh_options_set(&options, SSH_OPTIONS_HOST, FLAGS_host.c_str());
+  string host_alias = FLAGS_hst;
+  ssh_options_set(&options, SSH_OPTIONS_HOST, FLAGS_hst.c_str());
   // First parse user-specific ssh config, then system-wide config.
   parse_ssh_config_file(&options, string(home_dir) + USER_SSH_CONFIG_PATH);
   parse_ssh_config_file(&options, SYSTEM_SSH_CONFIG_PATH);
   LOG(INFO) << "Parsed ssh config file, connecting to " << options.host;
-  FLAGS_host = string(options.host);
+  FLAGS_hst = string(options.host);
 
   // Parse username: cmdline > sshconfig > localuser
   if (FLAGS_u.empty()) {
@@ -266,10 +270,10 @@ int main(int argc, char** argv) {
   }
 
   string idpasskeypair =
-      SshSetupHandler::SetupSsh(FLAGS_u, FLAGS_host, host_alias, FLAGS_port,
+      SshSetupHandler::SetupSsh(FLAGS_u, FLAGS_hst, host_alias, FLAGS_port,
                                 FLAGS_jumphost, FLAGS_jport, FLAGS_x);
 
-#if __NetBSD__
+#if __NetBSD__ || __sun__
   FILE* stderr_stream = freopen("/tmp/etclient_err", "w+", stderr);
   setvbuf(stderr_stream, NULL, _IOLBF, BUFSIZ);  // set to line buffering
 #else
@@ -279,7 +283,7 @@ int main(int argc, char** argv) {
 #endif
 
   if (!FLAGS_jumphost.empty()) {
-    FLAGS_host = FLAGS_jumphost;
+    FLAGS_hst = FLAGS_jumphost;
     FLAGS_port = FLAGS_jport;
   }
   globalClient = createClient(idpasskeypair);

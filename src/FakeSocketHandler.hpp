@@ -36,7 +36,7 @@ class FakeSocketHandler : public SocketHandler {
   std::shared_ptr<FakeSocketHandler> remoteHandler;
   unordered_map<int, std::string> inBuffers;
   unordered_set<int> closedFds;
-  mutex handlerMutex;
+  std::mutex handlerMutex;
   int nextFd;
   vector<int> futureConnections;
 };
